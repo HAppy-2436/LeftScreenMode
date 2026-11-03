@@ -1,4 +1,9 @@
 # 更新记录 / Changelog
+## v1.2.4
+- Win+A 快速设置、Win+N 通知中心、日历等系统浮出面板自动移入可用区域（右缘对齐可用区右缘）；新增 `RepositionFlyouts` 配置。
+- 通过 `EVENT_SYSTEM_FOREGROUND` 前台事件钩子即时重定位，`WatchTick` 兜底。
+- 启动时自动恢复任务栏/对齐残留状态。
+
 
 ## v1.2.3
 - 移除 `Ctrl+Alt+F12` 切换热键（改用比例热键与 `Win+Ctrl+0`）。

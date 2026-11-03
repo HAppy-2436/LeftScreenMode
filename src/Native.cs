@@ -351,6 +351,17 @@ namespace LeftScreenMode
 
         [DllImport("user32.dll")]
         public static extern short GetAsyncKeyState(int vKey);
+        // ---- 前台窗口事件钩子（快速设置 / 通知中心等系统浮出面板重定位） ----
+        public const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
+        public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+
+        public delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
         // ---- dwmapi ----
         [DllImport("dwmapi.dll")]

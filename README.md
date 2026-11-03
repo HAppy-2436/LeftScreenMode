@@ -68,7 +68,8 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 | 托盘双击 | 左侧模式 / 全屏模式切换 |
 
 - 数字可连按形成多位百分比（如 `4`、`5` → 45%；超过 100 按 100 计算）。
-- `Win+Ctrl+L` 是 Windows 11「实时字幕」的系统快捷键、`Win+Ctrl+0` 也被其它程序注册，普通方式无法占用，因此程序使用低级键盘钩子接管（运行本工具时这两个系统快捷键会被本工具使用）。如果不想接管，可在 `LeftScreenMode.ini` 中设置 `UseKeyboardHook=0` 并改用备用组合键（如 `Win+Alt+L`、`Win+Ctrl+F12`）。
+- Win+Ctrl+L 是 Windows 11「实时字幕」的系统快捷键、Win+Ctrl+0 也被其它程序注册，普通方式无法占用，因此程序使用低级键盘钩子接管（运行本工具时这两个系统快捷键会被本工具使用）。如果不想接管，可在 LeftScreenMode.ini 中设置 UseKeyboardHook=0 并改用备用组合键（如 Win+Alt+L、Win+Ctrl+F12）。
+- **系统浮出面板**（v1.2.4）：Win+A 快速设置、Win+N 通知中心、日历等会自动移入可用区域（右缘对齐可用区），不再落到黑屏/遮挡侧；可用 RepositionFlyouts=0 关闭。
 
 ## 配置
 
@@ -84,6 +85,7 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 | `HotkeyFullScreen` | 切回全屏的快捷键（默认 `Win+Ctrl+0`） |
 | `LayoutDigitTimeoutMs` | 按组合键后等待数字的时间（毫秒） |
 | `UseKeyboardHook` | 是否用键盘钩子识别/接管热键（默认 `1`） |
+| `RepositionFlyouts` | 是否把 Win+A / Win+N 等系统浮出面板移入可用区（默认 `1`） |
 | `HalfTaskbar` | 任务栏是否缩成可用区域宽度（默认 `1`） |
 | `LeftAlignTaskbarIcons` | 半屏时任务栏图标是否临时左对齐（默认 `1`） |
 | `MoveWindows` | 是否把窗口移入可用区域（默认 `1`） |
@@ -111,7 +113,8 @@ LeftScreenMode.exe --quit          退出并恢复所有设置
 
 - **独占全屏（DirectX exclusive fullscreen）**：覆盖窗无法显示，游戏仍按整屏渲染；请使用无边框窗口/窗口模式。
 - **无边框全屏视频/浏览器 F11**：遮罩会盖住不可用侧，相当于画面被裁掉一部分；建议用窗口模式。
-- **任务栏右下角通知/时钟**：位于不可用区域时会被遮罩盖住（本工具场景下通常也是物理遮挡区）。
+- **任务栏右下角通知/时钟**：位于不可用区域时会被遮罩盖住（本工具场景下通常也是物理遮挡区）；Win+A / Win+N 面板已自动移入可用区。
+- **Win 开始菜单**：仍由系统按整屏定位，半屏模式下可能出现在屏幕左侧（系统合成层绘制，外部程序无法移动）。
 - **任务栏图标居中**：Windows 的居中布局以整屏宽度为基准，缩窄任务栏后会错位；因此半屏默认临时改为左对齐，退出恢复（兼容 Windhawk 的居中方案，但半屏内无法保持真正的“居中”）。
 - **仅水平方向**：目前只支持左右分割，不支持上下分割。
 - **热键接管**：`Win+Ctrl+L`（实时字幕）/`Win+Ctrl+0` 被系统或其它程序占用，默认用键盘钩子接管；可在配置中关闭并改用备用组合键。

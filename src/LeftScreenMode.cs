@@ -17,7 +17,7 @@ namespace LeftScreenMode
 {
     internal static class Program
     {
-        public const string Version = "1.2.3";
+        public const string Version = "1.2.4";
         public static int CmdMessage;
         public static string ExeDir = "";
         public static string DataDir = "";
@@ -694,6 +694,7 @@ namespace LeftScreenMode
         public string HotkeyFullScreen = "Win+Ctrl+0";
         public int LayoutDigitTimeoutMs = 1500;
         public bool UseKeyboardHook = true;
+        public bool RepositionFlyouts = true;
         public bool MoveWindows = true;
         public bool ResizeFullscreenWindows = false;
         public bool ConstrainWorkArea = true;
@@ -734,6 +735,9 @@ namespace LeftScreenMode
             "\r\n" +
             "; 1=用低级键盘钩子识别组合键并接管数字输入（默认 1）。\r\n" +
             "UseKeyboardHook=1\r\n" +
+            "\r\n" +
+            "; 1=把 Win+A 快速设置 / Win+N 通知中心等系统浮出面板移入可用区域（默认 1）。\r\n" +
+            "RepositionFlyouts=1\r\n" +
             "\r\n" +
             "; 切回全屏的快捷键（默认 Win+Ctrl+0，被其它程序占用时用键盘钩子接管）。\r\n" +
             "HotkeyFullScreen=Win+Ctrl+0\r\n" +
@@ -794,6 +798,7 @@ namespace LeftScreenMode
                 if (c.LayoutDigitTimeoutMs < 500) c.LayoutDigitTimeoutMs = 500;
                 if (c.LayoutDigitTimeoutMs > 5000) c.LayoutDigitTimeoutMs = 5000;
                 c.UseKeyboardHook = Program.GetBool(kv, "UseKeyboardHook", c.UseKeyboardHook);
+                c.RepositionFlyouts = Program.GetBool(kv, "RepositionFlyouts", c.RepositionFlyouts);
                 c.HotkeyFullScreen = Program.GetString(kv, "HotkeyFullScreen", c.HotkeyFullScreen).Trim();
                 c.MoveWindows = Program.GetBool(kv, "MoveWindows", c.MoveWindows);
                 c.ResizeFullscreenWindows = Program.GetBool(kv, "ResizeFullscreenWindows", c.ResizeFullscreenWindows);
@@ -1430,6 +1435,8 @@ namespace LeftScreenMode
         private bool _fullHotkeyRegistered;
         private DateTime _lastFullHotkeyAt = DateTime.MinValue;
         private int _enableRetryLeft;
+        private IntPtr _winEventHook = IntPtr.Zero;
+        private Native.WinEventDelegate _winEventProc;
         private Icon _iconOn;
         private Icon _iconOff;
 
@@ -1452,6 +1459,7 @@ namespace LeftScreenMode
                 _iconOff = IconFactory.Create(false);
                 CreateTray();
                 RegisterLayoutHotkeys();
+                InstallForegroundHook();
                 RecoverFromCrash();
                 Program.RecoverTaskbarStale();
 
@@ -2363,6 +2371,7 @@ namespace LeftScreenMode
                 if (_enabled) _enableRetryLeft = 0;
             }
             if (_busy || !_enabled || _overlay == null || _overlay.IsDisposed) return;
+            FixShellFlyoutPosition();
             try
             {
                 Rectangle cur = Native.GetWindowRectangle(_overlay.Handle);
@@ -2840,6 +2849,70 @@ namespace LeftScreenMode
         {
             return "比例热键：" + _leftHotkeyText + " / " + _rightHotkeyText + " + 数字（如 7=70%）；" + _fullHotkeyText + " = 全屏";
         }
+        private void InstallForegroundHook()
+        {
+            if (!_cfg.RepositionFlyouts) return;
+            try
+            {
+                _winEventProc = new Native.WinEventDelegate(WinEventProc);
+                _winEventHook = Native.SetWinEventHook(Native.EVENT_SYSTEM_FOREGROUND, Native.EVENT_SYSTEM_FOREGROUND,
+                    IntPtr.Zero, _winEventProc, 0, 0, Native.WINEVENT_OUTOFCONTEXT);
+                if (_winEventHook == IntPtr.Zero)
+                    Program.Log("安装前台窗口事件钩子失败: " + Marshal.GetLastWin32Error());
+            }
+            catch (Exception ex)
+            {
+                Program.Log("安装前台窗口事件钩子异常: " + ex.Message);
+            }
+        }
+
+        private void UninstallForegroundHook()
+        {
+            if (_winEventHook == IntPtr.Zero) return;
+            try { Native.UnhookWinEvent(_winEventHook); }
+            catch { }
+            _winEventHook = IntPtr.Zero;
+            _winEventProc = null;
+        }
+
+        private void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        {
+            try { FixShellFlyoutPosition(); }
+            catch { }
+        }
+
+        private void FixShellFlyoutPosition()
+        {
+            if (!_cfg.RepositionFlyouts || !_enabled) return;
+            if (_leftWorkArea == Rectangle.Empty) return;
+            try
+            {
+                IntPtr h = Native.GetForegroundWindow();
+                if (h == IntPtr.Zero) return;
+                Native.RECT r;
+                if (!Native.GetWindowRect(h, out r)) return;
+                int w = r.Right - r.Left;
+                int ht = r.Bottom - r.Top;
+                if (w < 220 || w > 760 || ht < 380) return;
+                string cls = Native.GetClassNameSafe(h);
+                if (cls != "ControlCenterWindow" && cls != "Windows.UI.Core.CoreWindow") return;
+                uint pid;
+                Native.GetWindowThreadProcessId(h, out pid);
+                string proc = "";
+                try { proc = Process.GetProcessById((int)pid).ProcessName; }
+                catch { return; }
+                if (proc != "ShellHost" && proc != "ShellExperienceHost") return;
+                Rectangle usable = _leftWorkArea;
+                if (r.Left >= usable.Left - 4 && r.Right <= usable.Right + 4) return;
+                int x = usable.Right - w;
+                if (x < usable.Left + 4) x = usable.Left + 4;
+                if (Native.SetWindowPos(h, IntPtr.Zero, x, r.Top, w, ht, Native.SWP_NOZORDER | Native.SWP_NOACTIVATE))
+                    Program.Log("系统浮出面板已移入可用区: " + proc + " " + cls + " x=" + x + " w=" + w);
+            }
+            catch
+            {
+            }
+        }
         private void Balloon(string title, string text, ToolTipIcon icon)
         {
             if (_tray == null || !_tray.Visible) return;
@@ -3002,6 +3075,7 @@ namespace LeftScreenMode
                 if (_enabled) Disable();
                 CancelLayoutPending(false);
                 UninstallKeyboardHook();
+                UninstallForegroundHook();
                 CloseHint();
                 if (_layoutTimer != null)
                 {

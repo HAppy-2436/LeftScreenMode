@@ -54,3 +54,4 @@ HotkeyRightLayout=Win+Ctrl+R
 HotkeyFullScreen=Win+Ctrl+0
 LayoutDigitTimeoutMs=1500
 UseKeyboardHook=1
+RepositionFlyouts=1
