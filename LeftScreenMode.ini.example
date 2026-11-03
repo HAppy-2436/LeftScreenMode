@@ -1,0 +1,56 @@
+; ============================================================
+; LeftScreenMode 配置文件
+; 修改后请退出程序（托盘菜单“退出”）再重新启动，配置才会生效。
+; 首次运行会自动生成此文件。
+; ============================================================
+
+; 目标显示器。auto = 主显示器（默认）；也可填 "\\.\DISPLAY1"、
+; 或者显示器硬件 ID 中的关键字，例如 SKG2526（本机外接屏）。
+Monitor=auto
+
+; 左侧可用区域占屏幕宽度的百分比（10-90），默认 50 即左半屏。
+LeftAreaPercent=50
+
+; 遮盖哪一侧：right = 遮住右侧（默认，适合右侧被遮挡）；left = 遮住左侧。
+CoverSide=right
+
+
+; 1 = 进入左侧模式时把窗口移进左侧可用区域（默认 1）。
+MoveWindows=1
+
+; 1 = 尝试把无边框全屏窗口缩到左侧（默认 0，可能影响部分游戏）。
+ResizeFullscreenWindows=0
+
+; 1 = 把 Windows 工作区（窗口最大化区域）限制在左侧（默认 1，仅主显示器有效）。
+ConstrainWorkArea=1
+
+; 遮罩不透明度 1-100，默认 100（纯黑）。
+OverlayOpacity=100
+
+; 遮罩颜色，默认纯黑。
+OverlayColor=#000000
+
+; 1 = 程序启动时直接进入左侧模式（默认 0）。
+StartInLeftMode=0
+
+; 1 = 让任务栏也只占左半（默认 1；Windows 11 实测有效）。
+HalfTaskbar=1
+
+; 1 = 半屏模式下把任务栏图标临时改为左对齐（默认 1）。
+; 退出后自动恢复你原来的 TaskbarAl 设置；0 = 不改对齐。
+LeftAlignTaskbarIcons=1
+
+; 托盘菜单“显示区域”里列出的可用宽度百分比（10-90），逗号分隔。
+Presets=30,40,50,60,70,80
+
+; 1 = 切换时显示气泡提示（默认 1）。
+BalloonTips=1
+
+; ===== 比例热键（v1.2.0） =====
+; Win+Ctrl+L 被 Windows 11「实时字幕」占用，程序用键盘钩子接管；
+; 若不想接管：改成 Win+Alt+L 并把 UseKeyboardHook 设为 0。
+HotkeyLeftLayout=Win+Ctrl+L
+HotkeyRightLayout=Win+Ctrl+R
+HotkeyFullScreen=Win+Ctrl+0
+LayoutDigitTimeoutMs=1500
+UseKeyboardHook=1

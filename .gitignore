@@ -1,0 +1,16 @@
+# 运行期文件（每台机器生成，不纳入版本库）
+/LeftScreenMode.log
+/LeftScreenMode.runtime
+/LeftScreenMode.state
+/LeftScreenMode.cmd
+/LeftScreenMode.ini
+/.lsm_write_test
+
+# 编译产物（发布时通过 GitHub Releases 提供）
+/LeftScreenMode.exe
+*.pdb
+
+# 本地测试/验证输出
+/test/
+/tools/verify/
+/dist/
